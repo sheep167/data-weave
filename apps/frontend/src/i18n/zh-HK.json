@@ -1,0 +1,125 @@
+{
+  "app": {
+    "title": "⬡ DataWeave",
+    "subtitle": "AI 數據架構實驗室"
+  },
+  "tabs": {
+    "entities": "實體",
+    "whatif": "假設",
+    "data": "數據",
+    "export": "匯出"
+  },
+  "sidebar": {
+    "schema": "結構: {{name}}",
+    "editTable": "編輯表格",
+    "whatifPlaceholder": "AI 結構分析師 — 即將推出。",
+    "whatifDescription": "將分析您的結構並提出改進建議。",
+    "exportPlaceholder": "匯出選項 — 即將推出。"
+  },
+  "review": {
+    "title": "AI 結構分析師",
+    "description": "專業審查您的結構以找出優化機會 — 索引、正規化、查詢效能及數據完整性。",
+    "runReview": "分析結構",
+    "running": "分析中...",
+    "summary": "摘要",
+    "suggestions": "建議",
+    "compareChanges": "比較更改",
+    "applyChanges": "套用更改",
+    "dismiss": "關閉",
+    "before": "之前",
+    "after": "之後",
+    "viewing": "正在查看建議的更改",
+    "noSuggestions": "您的結構看起來很好 — 無需更改。",
+    "error": "審查失敗。請重試。",
+    "severity": {
+      "info": "資訊",
+      "warning": "警告",
+      "critical": "重要"
+    },
+    "category": {
+      "normalization": "正規化",
+      "indexing": "索引",
+      "integrity": "完整性",
+      "naming": "命名",
+      "scalability": "可擴展性",
+      "query": "查詢"
+    }
+  },
+  "canvas": {
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "fitView": "適合視窗",
+    "lockCanvas": "鎖定畫布",
+    "unlockCanvas": "解鎖畫布",
+    "toggleGrid": "切換網格",
+    "newTable": "新增表格",
+    "newRelationship": "新增關係"
+  },
+  "entityNode": {
+    "cols": "{{count}} 欄",
+    "primaryKey": "主鍵",
+    "foreignKey": "外鍵",
+    "unique": "唯一",
+    "indexed": "索引",
+    "pii": "個人資料",
+    "notNull": "非空"
+  },
+  "drawer": {
+    "editTable": "編輯表格",
+    "editTableDesc": "修改表格結構和欄位",
+    "tableName": "表格名稱",
+    "columns": "欄位",
+    "total": "共 {{count}} 個",
+    "addColumn": "新增欄位",
+    "saveAndClose": "儲存並關閉",
+    "deleteTable": "刪除表格",
+    "deleteTableConfirmTitle": "刪除「{{name}}」？",
+    "deleteTableConfirmDesc": "這將永久移除該表格及其所有關係。此操作無法復原。",
+    "newTable": "新增表格",
+    "newTableDesc": "在您的結構中建立新實體",
+    "newTablePlaceholder": "例如 users、products、events",
+    "newTableHint": "將自動新增主鍵欄位 (id uuid)。",
+    "createTable": "建立表格",
+    "newRelationship": "新增關係",
+    "newRelationshipDesc": "定義兩個表格之間的關係",
+    "sourceTable": "來源表格",
+    "targetTable": "目標表格",
+    "cardinality": "基數",
+    "labelOptional": "標籤（選填）",
+    "labelPlaceholder": "例如 has many、belongs to",
+    "selectTable": "選擇表格...",
+    "createRelationship": "建立關係",
+    "editRelationship": "編輯關係",
+    "deleteRelationship": "刪除關係",
+    "deleteRelConfirmTitle": "刪除此關係？",
+    "deleteRelConfirmDesc": "移除 {{source}} 和 {{target}} 之間的 {{cardinality}} 關係。此操作無法復原。"
+  },
+  "constraints": {
+    "primaryKey": "主鍵",
+    "foreignKey": "外鍵",
+    "unique": "唯一",
+    "indexed": "索引",
+    "nullable": "可空"
+  },
+  "dataGen": {
+    "title": "合成數據產生器",
+    "table": "表格",
+    "mode": "模式",
+    "realistic": "寫實（基於您的地理位置）",
+    "mock": "模擬",
+    "realisticDesc": "透過 Kimi 驅動 — 使用您的位置生成本地化數據",
+    "mockDesc": "使用 @faker-js/faker 以確定性種子產生模擬數據",
+    "rowCount": "列數",
+    "generate": "產生數據",
+    "generating": "產生中...",
+    "rows": "{{count}} 列",
+    "copyJson": "複製 JSON",
+    "moreRows": "... 還有 {{count}} 列",
+    "selectTable": "選擇表格...",
+    "geoDenied": "位置權限被拒絕。請在瀏覽器設定中啟用以使用寫實模式。",
+    "exportAs": "匯出格式",
+    "download": "下載",
+    "json": "JSON",
+    "csv": "CSV"
+  }
+}

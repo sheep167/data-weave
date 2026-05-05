@@ -10,6 +10,7 @@ import {
   Link2,
 } from "lucide-react";
 import { observer } from "mobx-react-lite";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/stores";
 import {
@@ -46,6 +47,7 @@ function ToolbarButton({ icon, label, onClick, active }: ToolbarButtonProps) {
 export const CanvasControls = observer(() => {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const { ui } = useStore();
+  const { t } = useTranslation();
 
   return (
     <Panel
@@ -54,17 +56,17 @@ export const CanvasControls = observer(() => {
     >
       <ToolbarButton
         icon={<ZoomIn className="h-4 w-4" />}
-        label="Zoom In"
+        label={t("canvas.zoomIn")}
         onClick={() => zoomIn()}
       />
       <ToolbarButton
         icon={<ZoomOut className="h-4 w-4" />}
-        label="Zoom Out"
+        label={t("canvas.zoomOut")}
         onClick={() => zoomOut()}
       />
       <ToolbarButton
         icon={<Maximize className="h-4 w-4" />}
-        label="Fit View"
+        label={t("canvas.fitView")}
         onClick={() => fitView({ padding: 0.2 })}
       />
       <div className="h-px bg-zinc-800 my-0.5" />
@@ -76,25 +78,27 @@ export const CanvasControls = observer(() => {
             <Unlock className="h-4 w-4" />
           )
         }
-        label={ui.canvasLocked ? "Unlock Canvas" : "Lock Canvas"}
+        label={
+          ui.canvasLocked ? t("canvas.lockCanvas") : t("canvas.unlockCanvas")
+        }
         onClick={() => ui.toggleCanvasLock()}
         active={ui.canvasLocked}
       />
       <ToolbarButton
         icon={<Grid3X3 className="h-4 w-4" />}
-        label="Toggle Grid"
+        label={t("canvas.toggleGrid")}
         onClick={() => ui.toggleGrid()}
         active={ui.showGrid}
       />
       <div className="h-px bg-zinc-800 my-0.5" />
       <ToolbarButton
         icon={<Plus className="h-4 w-4" />}
-        label="New Table"
+        label={t("canvas.newTable")}
         onClick={() => ui.openNewEntity()}
       />
       <ToolbarButton
         icon={<Link2 className="h-4 w-4" />}
-        label="New Relationship"
+        label={t("canvas.newRelationship")}
         onClick={() => ui.openNewRelationship()}
       />
     </Panel>

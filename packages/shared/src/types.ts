@@ -18,8 +18,10 @@ export type SqlType =
 
 export interface FieldConstraints {
   primaryKey?: boolean;
+  foreignKey?: boolean;
   nullable?: boolean;
   unique?: boolean;
+  indexed?: boolean;
   default?: string;
   check?: string;
 }

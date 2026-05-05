@@ -23,7 +23,7 @@ The app proves the builder thinks like a Staff Data Engineer: modeling, refactor
 **Portfolio Value**
 
 - Complex reactive graph UI (React Flow + MobX)
-- Secure LLM orchestration via unified gateway on the backend
+- Secure LLM orchestration via Moonshot Kimi API on the backend
 - Architectural reasoning + visual diffing
 - Full-stack lite architecture that scales to real monetization without rework
 
@@ -40,7 +40,7 @@ Freemium model → $12–$25/mo for unlimited generations, team workspaces, sche
 
 ### AI Schema Architect — “What If?” Panel (Unique Differentiator)
 
-- Powered by **DuckLLM** (unified gateway to 30+ models)
+- Powered by **Kimi (Moonshot AI)**
 - Analyzes live schema graph and suggests production-grade improvements:
   - “What if we convert this 1:N to true Many-to-Many → auto-create junction table”
   - “What if we normalize duplicated address fields → extract new Addresses entity”
@@ -51,7 +51,7 @@ Freemium model → $12–$25/mo for unlimited generations, team workspaces, sche
 
 ### Synthetic Data Generation (Two Modes)
 
-- **Realistic Mode** → DuckLLM (routed to best available model — e.g. Grok, Claude, Gemini, DeepSeek via single key)
+- **Realistic Mode** → Kimi API[](https://api.moonshot.ai): strong reasoning, long context (up to 256K+), excellent for structured schema tasks and domain realism
 - **Clearly Mock Mode** → `@faker-js/faker` + deterministic rules (obviously fake data for testing)
 - Live TanStack Table previews with infinite scroll
 - Quality scoring (realism, consistency, diversity, storage impact)
@@ -81,19 +81,18 @@ Freemium model → $12–$25/mo for unlimited generations, team workspaces, sche
 ### Backend (NestJS — Vercel Serverless)
 
 - Stateless API routes only
-- Clean service layer for LLM orchestration via **DuckLLM**
-- Official DuckLLM integration (https://duckllm.com/en + https://doc.duckllm.com/)
-- Automatic failover + load balancing across 30+ models
+- Clean service layer for LLM orchestration via **Kimi API**
+- Official integration: https://api.moonshot.ai + https://platform.kimi.ai/docs/api/overview
+- OpenAI-compatible endpoint (`base_url: "https://api.moonshot.ai/v1"`)
 - Structured JSON outputs + few-shot prompting for schema refactoring
 - Heavy export logic (Parquet generation, large SQL)
 
-### LLM Layer — DuckLLM Unified Gateway
+### LLM Layer — Kimi (Moonshot AI)
 
-- Primary: DuckLLM[](https://duckllm.com/)
-- One API key for OpenAI, Claude, Gemini, Grok, DeepSeek, and 30+ others
-- Enterprise-grade reliability, transparent pay-as-you-go pricing
-- Full availability in Hong Kong (no geo-blocks)
-- Easy fallback / model routing logic in backend
+- Primary: Kimi models (e.g. kimi-k2.5, kimi-k2-thinking) via https://api.moonshot.ai
+- OpenAI SDK compatible — drop-in replacement
+- Excellent long-context reasoning, strong structured output, fully available in Hong Kong
+- API Key managed securely in Vercel environment variables (never exposed client-side)
 
 ### Deployment
 

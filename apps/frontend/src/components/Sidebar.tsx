@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
+import { useTranslation } from "react-i18next";
 import { useStore } from "@/stores";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +30,7 @@ import {
   ShieldAlert,
   Pencil,
   Loader2,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Field, SqlType } from "@data-weave/shared";
@@ -299,9 +301,11 @@ function generateRealisticValue(
 
 const DataGenerationPanel = observer(() => {
   const { schema } = useStore();
+  const { t } = useTranslation();
   const [selectedEntityId, setSelectedEntityId] = useState("");
   const [rowCount, setRowCount] = useState(10);
   const [mode, setMode] = useState<GenerationMode>("realistic");
+  const [exportFormat, setExportFormat] = useState<"json" | "csv">("json");
   const [generating, setGenerating] = useState(false);
   const [generatedData, setGeneratedData] = useState<
     Record<string, unknown>[] | null
@@ -342,9 +346,7 @@ const DataGenerationPanel = observer(() => {
         (err) => {
           if (err.code === err.PERMISSION_DENIED) {
             setGeoPermission("denied");
-            setGeoError(
-              "Location permission denied. Enable it in browser settings to use Realistic mode.",
-            );
+            setGeoError(t("dataGen.geoDenied"));
           }
           reject(err);
         },
@@ -361,11 +363,14 @@ const DataGenerationPanel = observer(() => {
     if (mode === "realistic") {
       try {
         const { latitude, longitude } = await getGeolocation();
-        const response = await fetch("http://localhost:3001/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ entity, rowCount, latitude, longitude }),
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/generate`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ entity, rowCount, latitude, longitude }),
+          },
+        );
         if (!response.ok) throw new Error(`API error: ${response.status}`);
         const data = await response.json();
         setGeneratedData(Array.isArray(data) ? data : [data]);
@@ -400,20 +405,55 @@ const DataGenerationPanel = observer(() => {
     setGenerating(false);
   };
 
-  const handleCopyJSON = () => {
-    if (generatedData) {
-      navigator.clipboard.writeText(JSON.stringify(generatedData, null, 2));
+  function toCSV(rows: Record<string, unknown>[]): string {
+    if (!rows.length) return "";
+    const keys = Object.keys(rows[0]);
+    const escape = (v: unknown) =>
+      typeof v === "string" &&
+      (v.includes(",") || v.includes('"') || v.includes("\n"))
+        ? `"${v.replace(/"/g, '""')}"`
+        : (v ?? "");
+    const header = keys.join(",");
+    const body = rows
+      .map((row) => keys.map((k) => escape(row[k])).join(","))
+      .join("\n");
+    return `${header}\n${body}`;
+  }
+
+  const handleDownload = () => {
+    if (!generatedData) return;
+    let blob: Blob;
+    let filename: string;
+    if (exportFormat === "csv") {
+      blob = new Blob([toCSV(generatedData)], { type: "text/csv" });
+      filename = `${entity?.name || "data"}.csv`;
+    } else {
+      blob = new Blob([JSON.stringify(generatedData, null, 2)], {
+        type: "application/json",
+      });
+      filename = `${entity?.name || "data"}.json`;
     }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
   };
 
   return (
     <div className="space-y-4">
-      <p className="text-zinc-500 text-xs uppercase tracking-wider">
-        Synthetic Data Generator
+      <p className="text-zinc-500 text-xs uppercase tracking-wider font-medium">
+        {t("dataGen.title")}
       </p>
 
-      <div className="space-y-2">
-        <Label className="text-xs">Table</Label>
+      {/* Table selector */}
+      <div className="space-y-1.5">
+        <Label className="text-xs">{t("dataGen.table")}</Label>
         <Select
           value={selectedEntityId}
           onValueChange={(val) => {
@@ -422,7 +462,7 @@ const DataGenerationPanel = observer(() => {
           }}
         >
           <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="Select table..." />
+            <SelectValue placeholder={t("dataGen.selectTable")} />
           </SelectTrigger>
           <SelectContent>
             {schema.schema.entities.map((ent) => (
@@ -434,45 +474,46 @@ const DataGenerationPanel = observer(() => {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs">Mode</Label>
-        <Select
-          value={mode}
-          onValueChange={(val) => {
-            setMode(val as GenerationMode);
-            setGeneratedData(null);
-          }}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="realistic">
-              🌏 Realistic (AI + geolocation)
-            </SelectItem>
-            <SelectItem value="mock">
-              🧪 Clearly Mock (faker, deterministic)
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-[10px] text-zinc-600">
-          {mode === "realistic"
-            ? "AI-powered via DuckLLM gpt-5 — uses your location for locale-aware data"
-            : "Obviously fake test data using @faker-js/faker with deterministic seeding"}
-        </p>
+      {/* Mode & Row Count — side by side */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <Label className="text-xs">{t("dataGen.mode")}</Label>
+          <Select
+            value={mode}
+            onValueChange={(val) => {
+              setMode(val as GenerationMode);
+              setGeneratedData(null);
+            }}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="realistic">
+                {t("dataGen.realistic")}
+              </SelectItem>
+              <SelectItem value="mock">{t("dataGen.mock")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">{t("dataGen.rowCount")}</Label>
+          <Input
+            type="number"
+            min={1}
+            max={1000}
+            value={rowCount}
+            onChange={(e) => setRowCount(Number(e.target.value))}
+            className="h-8 text-xs"
+          />
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs">Row Count</Label>
-        <Input
-          type="number"
-          min={1}
-          max={1000}
-          value={rowCount}
-          onChange={(e) => setRowCount(Number(e.target.value))}
-          className="h-8 text-xs"
-        />
-      </div>
+      <p className="text-[10px] text-zinc-600">
+        {mode === "realistic"
+          ? t("dataGen.realisticDesc")
+          : t("dataGen.mockDesc")}
+      </p>
 
       {geoError && <p className="text-[10px] text-red-400">{geoError}</p>}
 
@@ -483,30 +524,189 @@ const DataGenerationPanel = observer(() => {
         onClick={handleGenerate}
       >
         {generating && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
-        {generating ? "Generating..." : "Generate Data"}
+        {generating ? t("dataGen.generating") : t("dataGen.generate")}
       </Button>
 
       {generatedData && (
-        <div className="space-y-2">
+        <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-zinc-500">
-              {generatedData.length} rows • {mode}
+            <span className="text-[10px] font-medium text-zinc-400">
+              {t("dataGen.rows", { count: generatedData.length })} • {mode}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-[10px]"
-              onClick={handleCopyJSON}
+            <span className="text-[10px] text-zinc-600 uppercase">
+              {exportFormat}
+            </span>
+          </div>
+
+          {/* Preview */}
+          <div className="max-h-48 overflow-auto rounded-md bg-zinc-950 border border-zinc-800 p-2">
+            <pre className="text-[10px] text-zinc-400 whitespace-pre-wrap leading-relaxed">
+              {exportFormat === "csv"
+                ? toCSV(generatedData.slice(0, 5))
+                : JSON.stringify(generatedData.slice(0, 5), null, 2)}
+              {generatedData.length > 5 &&
+                `\n${t("dataGen.moreRows", { count: generatedData.length - 5 })}`}
+            </pre>
+          </div>
+
+          {/* Export controls */}
+          <Separator />
+          <div className="flex items-center gap-2">
+            <Select
+              value={exportFormat}
+              onValueChange={(val) => setExportFormat(val as "json" | "csv")}
             >
-              Copy JSON
+              <SelectTrigger className="h-7 text-xs flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="json">{t("dataGen.json")}</SelectItem>
+                <SelectItem value="csv">{t("dataGen.csv")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              className="h-7 text-xs px-3"
+              onClick={handleDownload}
+            >
+              <Download className="h-3 w-3 mr-1.5" />
+              {t("dataGen.download")}
             </Button>
           </div>
-          <div className="max-h-60 overflow-auto rounded-md bg-zinc-950 border border-zinc-800 p-2">
-            <pre className="text-[10px] text-zinc-400 whitespace-pre-wrap">
-              {JSON.stringify(generatedData.slice(0, 5), null, 2)}
-              {generatedData.length > 5 &&
-                `\n... +${generatedData.length - 5} more rows`}
-            </pre>
+        </div>
+      )}
+    </div>
+  );
+});
+
+// ─── Schema Review Panel ────────────────────────────────────────────
+
+const SEVERITY_COLORS = {
+  info: "text-blue-400 bg-blue-400/10 border-blue-400/30",
+  warning: "text-amber-400 bg-amber-400/10 border-amber-400/30",
+  critical: "text-red-400 bg-red-400/10 border-red-400/30",
+};
+
+const SchemaReviewPanel = observer(() => {
+  const { review } = useStore();
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-4">
+      <p className="text-zinc-500 text-xs uppercase tracking-wider font-medium">
+        {t("review.title")}
+      </p>
+      <p className="text-[10px] text-zinc-600">{t("review.description")}</p>
+
+      {/* Run Review Button */}
+      {!review.result && (
+        <Button
+          size="sm"
+          className="w-full"
+          disabled={review.loading}
+          onClick={() => review.runReview()}
+        >
+          {review.loading && (
+            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+          )}
+          {review.loading ? t("review.running") : t("review.runReview")}
+        </Button>
+      )}
+
+      {/* Error */}
+      {review.error && (
+        <p className="text-[10px] text-red-400">{t("review.error")}</p>
+      )}
+
+      {/* Results */}
+      {review.result && (
+        <div className="space-y-3">
+          {/* Summary */}
+          <div className="rounded-md border border-zinc-800 bg-zinc-950/50 p-3">
+            <p className="text-[10px] text-zinc-500 uppercase mb-1 font-medium">
+              {t("review.summary")}
+            </p>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              {review.result.summary}
+            </p>
+          </div>
+
+          {/* Suggestions */}
+          {review.result.suggestions.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-[10px] text-zinc-500 uppercase font-medium">
+                {t("review.suggestions")} ({review.result.suggestions.length})
+              </p>
+              {review.result.suggestions.map((s) => (
+                <div
+                  key={s.id}
+                  className={cn(
+                    "rounded-md border p-2.5 space-y-1",
+                    SEVERITY_COLORS[s.severity],
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold">{s.title}</span>
+                    <span className="text-[9px] opacity-70 uppercase">
+                      {t(`review.category.${s.category}` as const, s.category)}
+                    </span>
+                  </div>
+                  <p className="text-[10px] opacity-80 leading-relaxed">
+                    {s.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[10px] text-zinc-500">
+              {t("review.noSuggestions")}
+            </p>
+          )}
+
+          {/* Compare & Apply */}
+          <Separator />
+          <div className="space-y-2">
+            {review.compareMode === "before" ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="w-full"
+                onClick={() => review.setCompareMode("after")}
+              >
+                {t("review.compareChanges")}
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-[10px] text-indigo-400">
+                  <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+                  {t("review.viewing")}
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => review.setCompareMode("before")}
+                >
+                  ← {t("review.before")}
+                </Button>
+              </div>
+            )}
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={() => review.applyProposedSchema()}
+            >
+              {t("review.applyChanges")}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full text-zinc-500"
+              onClick={() => review.dismiss()}
+            >
+              {t("review.dismiss")}
+            </Button>
           </div>
         </div>
       )}
@@ -518,6 +718,7 @@ const DataGenerationPanel = observer(() => {
 
 export const Sidebar = observer(() => {
   const { ui, schema } = useStore();
+  const { t, i18n } = useTranslation();
 
   const handleSelectEntity = (entityId: string) => {
     ui.selectEntity(entityId);
@@ -528,9 +729,7 @@ export const Sidebar = observer(() => {
       {/* Logo */}
       <div className="px-4 py-4">
         <h1 className="text-lg font-bold text-indigo-400">⬡ DataWeave</h1>
-        <p className="text-[11px] text-zinc-500 mt-0.5">
-          AI Data Architecture Lab
-        </p>
+        <p className="text-[11px] text-zinc-500 mt-0.5">{t("app.subtitle")}</p>
       </div>
 
       <Separator />
@@ -541,7 +740,7 @@ export const Sidebar = observer(() => {
         onValueChange={(v) => ui.setSidebarTab(v as typeof ui.sidebarTab)}
         className="flex-1 flex flex-col"
       >
-        <TabsList className="mx-3 mt-3 w-auto grid grid-cols-4">
+        <TabsList className="mx-3 mt-3 w-auto grid grid-cols-3">
           <TabsTrigger value="entities">
             <Box className="h-3.5 w-3.5" />
           </TabsTrigger>
@@ -551,15 +750,12 @@ export const Sidebar = observer(() => {
           <TabsTrigger value="data">
             <FlaskConical className="h-3.5 w-3.5" />
           </TabsTrigger>
-          <TabsTrigger value="export">
-            <Download className="h-3.5 w-3.5" />
-          </TabsTrigger>
         </TabsList>
 
-        <ScrollArea className="flex-1 px-3 py-2">
+        <ScrollArea className="flex-1 basis-0 px-3 py-2">
           <TabsContent value="entities" className="mt-0">
             <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">
-              Schema: {schema.schema.name}
+              {t("sidebar.schema", { name: schema.schema.name })}
             </p>
             <Accordion
               type="single"
@@ -602,7 +798,7 @@ export const Sidebar = observer(() => {
                       onClick={() => ui.openEditEntity(entity.id)}
                     >
                       <Pencil className="h-3 w-3 mr-1" />
-                      Edit Table
+                      {t("sidebar.editTable")}
                     </Button>
                   </AccordionContent>
                 </AccordionItem>
@@ -611,25 +807,31 @@ export const Sidebar = observer(() => {
           </TabsContent>
 
           <TabsContent value="whatif" className="mt-0">
-            <div className="text-zinc-500 text-xs space-y-2">
-              <p>AI Schema Architect — coming next batch.</p>
-              <p className="text-zinc-600">
-                Will analyze your schema and suggest improvements.
-              </p>
-            </div>
+            <SchemaReviewPanel />
           </TabsContent>
 
           <TabsContent value="data" className="mt-0">
             <DataGenerationPanel />
           </TabsContent>
-
-          <TabsContent value="export" className="mt-0">
-            <p className="text-zinc-500 text-xs">
-              Export options — coming next batch.
-            </p>
-          </TabsContent>
         </ScrollArea>
       </Tabs>
+
+      {/* Language Switcher */}
+      <div className="px-3 py-3 border-t border-zinc-800">
+        <Select
+          value={i18n.language}
+          onValueChange={(lang) => i18n.changeLanguage(lang)}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <Globe className="h-3.5 w-3.5 mr-1.5 text-zinc-400" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="zh-HK">繁體中文</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </aside>
   );
 });

@@ -24,11 +24,13 @@
     "@xyflow/react": "^12.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "i18next": "^26.0.8",
     "lucide-react": "^1.14.0",
     "mobx": "^6.13.0",
     "mobx-react-lite": "^4.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-i18next": "^17.0.6",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
