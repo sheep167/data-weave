@@ -4,15 +4,15 @@ import en from "./en.json";
 import zhHK from "./zh-HK.json";
 
 i18n.use(initReactI18next).init({
-  resources: {
-    en: { translation: en },
-    "zh-HK": { translation: zhHK },
-  },
-  lng: "en",
-  fallbackLng: "en",
-  interpolation: {
-    escapeValue: false,
-  },
+    resources: {
+        en: { translation: en },
+        "zh-HK": { translation: zhHK },
+    },
+    lng: "en",
+    fallbackLng: "en",
+    interpolation: {
+        escapeValue: false,
+    },
 });
 
 export default i18n;

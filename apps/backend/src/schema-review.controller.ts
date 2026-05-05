@@ -3,15 +3,15 @@ import { LlmService } from "./services/llm.service";
 import type { Schema } from "@data-weave/shared";
 
 interface ReviewSchemaBody {
-  schema: Schema;
+    schema: Schema;
 }
 
 @Controller("schema-review")
 export class SchemaReviewController {
-  constructor(private readonly llmService: LlmService) {}
+    constructor(private readonly llmService: LlmService) {}
 
-  @Post()
-  async reviewSchema(@Body() body: ReviewSchemaBody) {
-    return this.llmService.reviewSchema(body.schema);
-  }
+    @Post()
+    async reviewSchema(@Body() body: ReviewSchemaBody) {
+        return this.llmService.reviewSchema(body.schema);
+    }
 }

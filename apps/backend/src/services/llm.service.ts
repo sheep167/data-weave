@@ -3,90 +3,86 @@ import type { Schema, WhatIfSuggestion, Entity } from "@data-weave/shared";
 
 @Injectable()
 export class LlmService {
-  private readonly logger = new Logger(LlmService.name);
+    private readonly logger = new Logger(LlmService.name);
 
-  private get apiKey(): string {
-    return process.env.MOONSHOT_API_KEY ?? "";
-  }
+    private get apiKey(): string {
+        return process.env.MOONSHOT_API_KEY ?? "";
+    }
 
-  private get baseUrl(): string {
-    return process.env.MOONSHOT_BASE_URL ?? "https://api.moonshot.ai/v1";
-  }
+    private get baseUrl(): string {
+        return process.env.MOONSHOT_BASE_URL ?? "https://api.moonshot.ai/v1";
+    }
 
-  private get model(): string {
-    return process.env.MOONSHOT_MODEL ?? "kimi-k2.6";
-  }
+    private get model(): string {
+        return process.env.MOONSHOT_MODEL ?? "kimi-k2.6";
+    }
 
-  /**
-   * Mock implementation — replace with real Grok/Groq calls when API key is ready.
-   */
-  async getWhatIfSuggestions(schema: Schema): Promise<WhatIfSuggestion[]> {
-    this.logger.log(
-      `Generating what-if suggestions for schema: ${schema.name}`,
-    );
+    /**
+     * Mock implementation — replace with real Grok/Groq calls when API key is ready.
+     */
+    async getWhatIfSuggestions(schema: Schema): Promise<WhatIfSuggestion[]> {
+        this.logger.log(`Generating what-if suggestions for schema: ${schema.name}`);
 
-    // Simulate latency
-    await new Promise((r) => setTimeout(r, 800));
+        // Simulate latency
+        await new Promise((r) => setTimeout(r, 800));
 
-    return [
-      {
-        id: "mock_suggestion_1",
-        title: "Extract Addresses Entity",
-        description:
-          "Customers often have multiple addresses (billing, shipping). Extract a dedicated addresses table with a 1:N relationship from customers.",
-        category: "normalization",
-        proposedSchema: schema,
-        diff: {
-          entities: [],
-          relationships: [],
-          summary:
-            "Mock diff — real implementation will compute entity/relationship diffs.",
-        },
-      },
-    ];
-  }
+        return [
+            {
+                id: "mock_suggestion_1",
+                title: "Extract Addresses Entity",
+                description:
+                    "Customers often have multiple addresses (billing, shipping). Extract a dedicated addresses table with a 1:N relationship from customers.",
+                category: "normalization",
+                proposedSchema: schema,
+                diff: {
+                    entities: [],
+                    relationships: [],
+                    summary:
+                        "Mock diff — real implementation will compute entity/relationship diffs.",
+                },
+            },
+        ];
+    }
 
-  /**
-   * Mock synthetic data generation via LLM
-   */
-  async generateRealisticData(
-    schema: Schema,
-    entityId: string,
-    rowCount: number,
-  ): Promise<Record<string, unknown>[]> {
-    this.logger.log(
-      `Generating ${rowCount} realistic rows for entity ${entityId}`,
-    );
-    await new Promise((r) => setTimeout(r, 500));
+    /**
+     * Mock synthetic data generation via LLM
+     */
+    async generateRealisticData(
+        schema: Schema,
+        entityId: string,
+        rowCount: number,
+    ): Promise<Record<string, unknown>[]> {
+        this.logger.log(`Generating ${rowCount} realistic rows for entity ${entityId}`);
+        await new Promise((r) => setTimeout(r, 500));
 
-    return Array.from({ length: rowCount }, (_, i) => ({
-      id: `mock-uuid-${i}`,
-      _note: "Mock data — connect Grok API for realistic generation",
-    }));
-  }
+        return Array.from({ length: rowCount }, (_, i) => ({
+            id: `mock-uuid-${i}`,
+            _note: "Mock data — connect Grok API for realistic generation",
+        }));
+    }
 
-  /**
-   * Realistic data generation via Kimi (kimi-k2.6)
-   * Uses geolocation to generate locale-specific data
-   */
-  async generateRealisticDataWithLLM(
-    entity: Entity,
-    rowCount: number,
-    latitude: number,
-    longitude: number,
-  ): Promise<Record<string, unknown>[]> {
-    this.logger.log(
-      `Generating ${rowCount} realistic rows for "${entity.name}" via Kimi (lat=${latitude}, lng=${longitude})`,
-    );
+    /**
+     * Realistic data generation via Kimi (kimi-k2.6)
+     * Uses geolocation to generate locale-specific data
+     */
+    async generateRealisticDataWithLLM(
+        entity: Entity,
+        rowCount: number,
+        latitude: number,
+        longitude: number,
+    ): Promise<Record<string, unknown>[]> {
+        this.logger.log(
+            `Generating ${rowCount} realistic rows for "${entity.name}" via Kimi (lat=${latitude}, lng=${longitude})`,
+        );
 
-    const fieldsDescription = entity.fields
-      .map(
-        (f) =>
-          `${f.name} (${f.type}${f.constraints.primaryKey ? ", PK" : ""}${f.constraints.nullable ? ", nullable" : ""})`,
-      )
-      .join(", ");
+        const fieldsDescription = entity.fields
+            .map(
+                (f) =>
+                    `${f.name} (${f.type}${f.constraints.primaryKey ? ", PK" : ""}${f.constraints.nullable ? ", nullable" : ""})`,
+            )
+            .join(", ");
 
-    const userMessage = `
+        const userMessage = `
         You are generating locale and geolocation specific data for the user. The user is now in latitude ${latitude} and longitude ${longitude}. Generate realistic, privacy-safe synthetic data that reflects the culture, naming conventions, addresses, and business patterns of the region near these coordinates. Output ONLY a valid JSON array with no markdown formatting.
         
         Generate exactly ${rowCount} rows of realistic synthetic data for a database table called "${entity.name}" with the following columns: ${fieldsDescription}. 
@@ -108,107 +104,103 @@ export class LlmService {
 
     `;
 
-    try {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: [{ role: "user", content: userMessage }],
-          response_format: { type: "json_object" },
-        }),
-      });
+        try {
+            const response = await fetch(`${this.baseUrl}/chat/completions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages: [{ role: "user", content: userMessage }],
+                    response_format: { type: "json_object" },
+                }),
+            });
 
-      if (!response.ok) {
-        const text = await response.text();
-        this.logger.error(
-          `Kimi API error: ${response.status} — ${text.slice(0, 200)}`,
-        );
-        throw new Error(`Kimi API returned ${response.status}`);
-      }
+            if (!response.ok) {
+                const text = await response.text();
+                this.logger.error(`Kimi API error: ${response.status} — ${text.slice(0, 200)}`);
+                throw new Error(`Kimi API returned ${response.status}`);
+            }
 
-      const contentType = response.headers.get("content-type") ?? "";
-      if (!contentType.includes("application/json")) {
-        const text = await response.text();
-        this.logger.error(
-          `Kimi returned non-JSON response: ${text.slice(0, 200)}`,
-        );
-        throw new Error("Kimi returned non-JSON response");
-      }
+            const contentType = response.headers.get("content-type") ?? "";
+            if (!contentType.includes("application/json")) {
+                const text = await response.text();
+                this.logger.error(`Kimi returned non-JSON response: ${text.slice(0, 200)}`);
+                throw new Error("Kimi returned non-JSON response");
+            }
 
-      const data = await response.json();
-      const content: string = data.choices?.[0]?.message?.content ?? "[]";
+            const data = await response.json();
+            const content: string = data.choices?.[0]?.message?.content ?? "[]";
 
-      // Parse JSON from response (handle potential markdown code fences)
-      const jsonStr = content
-        .replace(/```json?\n?/g, "")
-        .replace(/```/g, "")
-        .trim();
-      const parsed = JSON.parse(jsonStr);
+            // Parse JSON from response (handle potential markdown code fences)
+            const jsonStr = content
+                .replace(/```json?\n?/g, "")
+                .replace(/```/g, "")
+                .trim();
+            const parsed = JSON.parse(jsonStr);
 
-      if (Array.isArray(parsed)) {
-        return parsed.slice(0, rowCount);
-      }
+            if (Array.isArray(parsed)) {
+                return parsed.slice(0, rowCount);
+            }
 
-      return parsed;
-    } catch (error) {
-      this.logger.error(`Kimi generation failed: ${error}`);
-      throw error;
+            return parsed;
+        } catch (error) {
+            this.logger.error(`Kimi generation failed: ${error}`);
+            throw error;
+        }
     }
-  }
 
-  /**
-   * Schema review via Kimi — professional analysis of schema design
-   * Returns structured suggestions for optimization
-   */
-  async reviewSchema(schema: Schema): Promise<{
-    summary: string;
-    suggestions: Array<{
-      id: string;
-      title: string;
-      category: string;
-      severity: "info" | "warning" | "critical";
-      description: string;
-      proposedChanges: {
-        entities: Schema["entities"];
-        relationships: Schema["relationships"];
-      };
-    }>;
-    proposedSchema: Schema;
-  }> {
-    this.logger.log(`Reviewing schema: ${schema.name}`);
+    /**
+     * Schema review via Kimi — professional analysis of schema design
+     * Returns structured suggestions for optimization
+     */
+    async reviewSchema(schema: Schema): Promise<{
+        summary: string;
+        suggestions: Array<{
+            id: string;
+            title: string;
+            category: string;
+            severity: "info" | "warning" | "critical";
+            description: string;
+            proposedChanges: {
+                entities: Schema["entities"];
+                relationships: Schema["relationships"];
+            };
+        }>;
+        proposedSchema: Schema;
+    }> {
+        this.logger.log(`Reviewing schema: ${schema.name}`);
 
-    const schemaJson = JSON.stringify(
-      {
-        name: schema.name,
-        entities: schema.entities.map((e) => ({
-          id: e.id,
-          name: e.name,
-          fields: e.fields.map((f) => ({
-            id: f.id,
-            name: f.name,
-            type: f.type,
-            constraints: f.constraints,
-          })),
-        })),
-        relationships: schema.relationships.map((r) => ({
-          id: r.id,
-          sourceEntityId: r.sourceEntityId,
-          sourceFieldId: r.sourceFieldId,
-          targetEntityId: r.targetEntityId,
-          targetFieldId: r.targetFieldId,
-          cardinality: r.cardinality,
-          label: r.label,
-        })),
-      },
-      null,
-      2,
-    );
+        const schemaJson = JSON.stringify(
+            {
+                name: schema.name,
+                entities: schema.entities.map((e) => ({
+                    id: e.id,
+                    name: e.name,
+                    fields: e.fields.map((f) => ({
+                        id: f.id,
+                        name: f.name,
+                        type: f.type,
+                        constraints: f.constraints,
+                    })),
+                })),
+                relationships: schema.relationships.map((r) => ({
+                    id: r.id,
+                    sourceEntityId: r.sourceEntityId,
+                    sourceFieldId: r.sourceFieldId,
+                    targetEntityId: r.targetEntityId,
+                    targetFieldId: r.targetFieldId,
+                    cardinality: r.cardinality,
+                    label: r.label,
+                })),
+            },
+            null,
+            2,
+        );
 
-    const userMessage = `
+        const userMessage = `
 You are a senior database architect performing a professional schema review. Analyze the following database schema comprehensively.
 
 Review criteria:
@@ -249,58 +241,53 @@ Important rules:
 - Each relationship must have: id, sourceEntityId, sourceFieldId, targetEntityId, targetFieldId, cardinality
 `;
 
-    try {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: [{ role: "user", content: userMessage }],
-          response_format: { type: "json_object" },
-        }),
-      });
+        try {
+            const response = await fetch(`${this.baseUrl}/chat/completions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages: [{ role: "user", content: userMessage }],
+                    response_format: { type: "json_object" },
+                }),
+            });
 
-      if (!response.ok) {
-        const text = await response.text();
-        this.logger.error(
-          `Kimi API error: ${response.status} — ${text.slice(0, 200)}`,
-        );
-        throw new Error(`Kimi API returned ${response.status}`);
-      }
+            if (!response.ok) {
+                const text = await response.text();
+                this.logger.error(`Kimi API error: ${response.status} — ${text.slice(0, 200)}`);
+                throw new Error(`Kimi API returned ${response.status}`);
+            }
 
-      const data = await response.json();
-      const content: string = data.choices?.[0]?.message?.content ?? "{}";
+            const data = await response.json();
+            const content: string = data.choices?.[0]?.message?.content ?? "{}";
 
-      const jsonStr = content
-        .replace(/```json?\n?/g, "")
-        .replace(/```/g, "")
-        .trim();
-      const parsed = JSON.parse(jsonStr);
+            const jsonStr = content
+                .replace(/```json?\n?/g, "")
+                .replace(/```/g, "")
+                .trim();
+            const parsed = JSON.parse(jsonStr);
 
-      // Reconstruct full proposed schema
-      const proposedSchema: Schema = {
-        ...schema,
-        entities: (parsed.proposedSchema?.entities ?? schema.entities).map(
-          (e: Entity) => ({
-            ...e,
-            position: e.position ?? { x: 600, y: 200 },
-          }),
-        ),
-        relationships:
-          parsed.proposedSchema?.relationships ?? schema.relationships,
-      };
+            // Reconstruct full proposed schema
+            const proposedSchema: Schema = {
+                ...schema,
+                entities: (parsed.proposedSchema?.entities ?? schema.entities).map((e: Entity) => ({
+                    ...e,
+                    position: e.position ?? { x: 600, y: 200 },
+                })),
+                relationships: parsed.proposedSchema?.relationships ?? schema.relationships,
+            };
 
-      return {
-        summary: parsed.summary ?? "Review complete.",
-        suggestions: parsed.suggestions ?? [],
-        proposedSchema,
-      };
-    } catch (error) {
-      this.logger.error(`Schema review failed: ${error}`);
-      throw error;
+            return {
+                summary: parsed.summary ?? "Review complete.",
+                suggestions: parsed.suggestions ?? [],
+                proposedSchema,
+            };
+        } catch (error) {
+            this.logger.error(`Schema review failed: ${error}`);
+            throw error;
+        }
     }
-  }
 }

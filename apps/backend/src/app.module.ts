@@ -6,12 +6,8 @@ import { SchemaReviewController } from "./schema-review.controller";
 import { LlmService } from "./services/llm.service";
 
 @Module({
-  imports: [ConfigModule.forRoot()],
-  controllers: [
-    HealthController,
-    DataGenerationController,
-    SchemaReviewController,
-  ],
-  providers: [LlmService],
+    imports: [ConfigModule.forRoot()],
+    controllers: [HealthController, DataGenerationController, SchemaReviewController],
+    providers: [LlmService],
 })
 export class AppModule {}

@@ -42,10 +42,10 @@ Freemium model → $12–$25/mo for unlimited generations, team workspaces, sche
 
 - Powered by **Kimi (Moonshot AI)**
 - Analyzes live schema graph and suggests production-grade improvements:
-  - “What if we convert this 1:N to true Many-to-Many → auto-create junction table”
-  - “What if we normalize duplicated address fields → extract new Addresses entity”
-  - “What if we simplify over-normalized lookup tables → polymorphic pattern”
-  - Performance, indexing, soft-delete, temporal, partitioning hints
+    - “What if we convert this 1:N to true Many-to-Many → auto-create junction table”
+    - “What if we normalize duplicated address fields → extract new Addresses entity”
+    - “What if we simplify over-normalized lookup tables → polymorphic pattern”
+    - Performance, indexing, soft-delete, temporal, partitioning hints
 - Side-by-side React Flow canvases with colored diffs (green = new, red = removed, animated edges)
 - One-click “Apply” → updates main canvas + refreshes data preview
 

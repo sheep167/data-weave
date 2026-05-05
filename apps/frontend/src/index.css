@@ -2,11 +2,11 @@
 @import "@xyflow/react/dist/style.css";
 
 :root {
-  color-scheme: dark;
+    color-scheme: dark;
 }
 
 body {
-  @apply bg-zinc-950 text-zinc-100 antialiased;
-  margin: 0;
-  font-family: "Inter", system-ui, sans-serif;
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+    margin: 0;
+    font-family: "Inter", system-ui, sans-serif;
 }

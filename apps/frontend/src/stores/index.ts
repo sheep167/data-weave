@@ -7,7 +7,7 @@ export const uiStore = new UIStore();
 export const reviewStore = new SchemaReviewStore();
 
 export const useStore = () => ({
-  schema: schemaStore,
-  ui: uiStore,
-  review: reviewStore,
+    schema: schemaStore,
+    ui: uiStore,
+    review: reviewStore,
 });
